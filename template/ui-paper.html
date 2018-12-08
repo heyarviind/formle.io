@@ -1,126 +1,4 @@
-package main
-
-import (
-	"fmt"
-	"net/http"
-	"regexp"
-	"strings"
-	"time"
-
-	"github.com/gorilla/mux"
-	"github.com/keighl/postmark"
-)
-
-var serverToken = "0b6a11e4-d012-415d-9ce7-97010d3b6803"
-var accountToken = "ec02a12e-7ae0-4df0-86c6-62bb06ba77f0"
-
-//EmailResponse struct
-type EmailResponse struct {
-	Message string `json:"message" xml:"message"`
-}
-
-func main() {
-	r := mux.NewRouter()
-
-	r.HandleFunc("/", indexRoute)
-	r.HandleFunc("/{email}", doEmail).Methods("POST")
-
-	if err := http.ListenAndServe(":1420", r); err != nil {
-		panic(err)
-	}
-}
-
-func indexRoute(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello World!\n"))
-}
-
-func doEmail(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-
-		var (
-			toReplyEmail string
-			toEmail      string
-		)
-
-		var params = make(map[string]string)
-
-		toEmail = mux.Vars(r)["email"]
-
-		if err := r.ParseForm(); err != nil {
-			fmt.Println("got stuck into an error")
-			panic(err)
-		}
-
-		for key, value := range r.PostForm {
-			if key == "_replyto" {
-				toReplyEmail = strings.Join(value, "")
-			} else {
-				params[key] = strings.Join(value, "")
-			}
-		}
-
-		// Validate emails
-		if checkEmail(toEmail) && checkEmail(toReplyEmail) {
-			// Get the HTML Body
-			body := prepareEmailBody(params)
-
-			// Send the mail
-			// fmt.Println(body)
-			sendEmail(toReplyEmail, toEmail, body)
-		} else {
-			panic("In valid email provided!")
-		}
-
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func sendEmail(toReplyEmail, toEmail, body string) bool {
-
-	fmt.Printf("Reply to email : %s\n", toReplyEmail)
-	fmt.Printf("to email : %s\n", toEmail)
-
-	client := postmark.NewClient(serverToken, accountToken)
-	email := postmark.Email{
-		From:       "no-reply@uicard.io",
-		To:         toEmail,
-		ReplyTo:    toReplyEmail,
-		Subject:    "New form submission - UICardio",
-		HtmlBody:   body, //[TODO] place html theme here
-		TextBody:   body,
-		Tag:        "pw-reset",
-		TrackOpens: true,
-	}
-
-	_, err := client.SendEmail(email)
-	if err != nil {
-		panic(err)
-		return false
-	}
-	return true
-}
-
-func prepareEmailBody(params map[string]string) string {
-	currentTime := time.Now().UTC()
-	dateTime := currentTime.Format("02 Jan, 2006 15:04 pm")
-
-	// Worst way of mergin the strings
-	var formattedParams []string
-	for k, v := range params {
-		formattedParams = append(formattedParams, `
-		<tr>
-		<td width="120px" style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">`+k+`</td>
-		<td style="border-top: solid 1px #ededed;padding-top: 10px">`+v+`</td>
-		</tr>
-		`)
-	}
-
-	damn := strings.Join(formattedParams, "")
-
-	htmlBody := `
-	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=3Dutf-8">
@@ -201,7 +79,22 @@ func prepareEmailBody(params map[string]string) string {
                           
                           <!-- Real info here -->
                           <table style="font-size:16px" cellpadding="10px">
-                            <tbody>` + damn + `</tbody>
+                            <tbody>
+                              <tr>
+                                <td width="120px" style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">Name</td>
+                                <td style="border-top: solid 1px #ededed;padding-top: 10px">Arvind</td>
+                              </tr>
+                              <tr>
+                                <td style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">Message</td>
+                                <td style="border-top: solid 1px #ededed;padding-top: 10px">Hi!
+
+                                  I really love your Hugo UILite Pro theme! It's super elegant. I would like to replace my current strata theme with your this theme.
+                                  
+                                  The thing I'm a bit worried about is that I have only a blog, and don't want to use your other features for skills, experience portfolio, etc for now. Would it be possible to add the latest (two) blog posts where the skills and experience are?
+                                  
+                                  Thanks for your answer, Jasper</td>
+                              </tr>
+                            </tbody>
                           </table>
 
                         </td>
@@ -211,7 +104,7 @@ func prepareEmailBody(params map[string]string) string {
                       </tr><tr>
                         <td class="m_-7751771597802085424bodycopy" style="padding-bottom:58px;color:#3e416d;font-family:helvetica;font-size:18px;line-height:1.5">
                           <br>
-                          <div style="font-size:14px;text-align:center;color: #9fa0b9;">The form was submitted on ` + dateTime + ` UTC</div>
+                          <div style="font-size:14px;text-align:center;color: #9fa0b9;">The form was submitted at 04:30 PM UTC - 17th November 2018</div>
                         </td>
                       </tr>
                     </tbody></table>
@@ -226,7 +119,8 @@ func prepareEmailBody(params map[string]string) string {
     </tr>
     <tr>
       <td>
-        <table bgcolor="#ffffff" class="m_-7751771597802085424widecontent" align="center" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%">
+        
+        <table bgcolor="#ffffff" class="m_-7751771597802085424widecontent" align="center" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;width:100%">
           <tbody><tr>
             <td class="m_-7751771597802085424footer" bgcolor="#f9fafe" style="padding:48px 30px 15px">
               <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -274,11 +168,3 @@ func prepareEmailBody(params map[string]string) string {
 
 </body>
 </html>
-	`
-	return htmlBody
-}
-
-func checkEmail(email string) bool {
-	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	return re.MatchString(email)
-}
