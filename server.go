@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/gorilla/mux"
-
 	"github.com/keighl/postmark"
 )
 
@@ -36,7 +36,15 @@ func indexRoute(w http.ResponseWriter, r *http.Request) {
 
 func doEmail(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		fmt.Printf("reached here\n")
+
+		var (
+			toReplyEmail string
+			toEmail      string
+		)
+
+		var params = make(map[string]string)
+
+		toEmail = mux.Vars(r)["email"]
 
 		if err := r.ParseForm(); err != nil {
 			fmt.Println("got stuck into an error")
@@ -44,11 +52,22 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for key, value := range r.PostForm {
-			fmt.Printf("%s = %s\n", key, strings.Join(value, ""))
-
 			if key == "_replyto" {
-
+				toReplyEmail = strings.Join(value, "")
+			} else {
+				params[key] = strings.Join(value, "")
 			}
+		}
+
+		// Validate emails
+		if checkEmail(toEmail) && checkEmail(toReplyEmail) {
+			// Get the HTML Body
+			body := prepareEmailBody(params)
+
+			// Send the mail
+			sendEmail(toReplyEmail, toEmail, body)
+		} else {
+			panic("In valid email provided!")
 		}
 
 	}
@@ -57,14 +76,18 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendEmail(toReplyEmail, toEmail, body string) bool {
+
+	fmt.Printf("Reply to email : %s\n", toReplyEmail)
+	fmt.Printf("to email : %s\n", toEmail)
+
 	client := postmark.NewClient(serverToken, accountToken)
 	email := postmark.Email{
 		From:       "no-reply@uicard.io",
 		To:         toEmail,
 		ReplyTo:    toReplyEmail,
 		Subject:    "New form submission - UICardio",
-		HtmlBody:   "...", //[TODO] place html theme here
-		TextBody:   "...",
+		HtmlBody:   body, //[TODO] place html theme here
+		TextBody:   body,
 		Tag:        "pw-reset",
 		TrackOpens: true,
 	}
@@ -75,4 +98,39 @@ func sendEmail(toReplyEmail, toEmail, body string) bool {
 		return false
 	}
 	return true
+}
+
+func prepareEmailBody(params map[string]string) string {
+	htmlBody := `
+	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+	<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	
+		<title></title>
+	
+		<style type="text/css">
+		</style>    
+	</head>
+	<body style="margin:0; padding:0; background-color:#F2F2F2;">
+		<center>
+			<table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#F2F2F2">
+					<tr>
+							<td align="center" valign="top">
+								Hello this is a template
+							</td>
+					</tr>
+			</table>
+		</center>
+	</body>
+	</html>
+	`
+	return htmlBody
+}
+
+func checkEmail(email string) bool {
+	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return re.MatchString(email)
 }
