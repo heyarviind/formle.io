@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/gorilla/mux"
 
 	"github.com/keighl/postmark"
-	"github.com/labstack/echo"
 )
 
 var serverToken = "0b6a11e4-d012-415d-9ce7-97010d3b6803"
@@ -16,28 +19,41 @@ type EmailResponse struct {
 }
 
 func main() {
-	// Creating a new echo server
-	e := echo.New()
-	// Defining all the routes here
-	e.GET("/", indexRoute)
-	e.POST("/:email", doEmail)
-	//Starting the server
-	e.Logger.Fatal(e.Start(":1420"))
+	r := mux.NewRouter()
+
+	r.HandleFunc("/", indexRoute)
+	r.HandleFunc("/{email}", doEmail).Methods("POST")
+
+	if err := http.ListenAndServe(":1420", r); err != nil {
+		panic(err)
+	}
 }
 
-func indexRoute(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, world!")
+func indexRoute(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Hello World!\n"))
 }
 
-func doEmail(c echo.Context) error {
+func doEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		fmt.Printf("reached here\n")
 
-	res := &EmailResponse{
-		Message: c.Param("email"),
+		if err := r.ParseForm(); err != nil {
+			fmt.Println("got stuck into an error")
+			panic(err)
+		}
+
+		for key, value := range r.PostForm {
+			fmt.Printf("%s = %s\n", key, strings.Join(value, ""))
+
+			if key == "_replyto" {
+
+			}
+		}
+
 	}
 
-	// fmt.Printf("%s, %s, %s\n", name, email, message)
-
-	return c.JSON(http.StatusOK, res)
+	w.WriteHeader(http.StatusOK)
 }
 
 func sendEmail(toReplyEmail, toEmail, body string) bool {
