@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"go-mailapp/config"
+	"go-mailapp/db"
 	"net/http"
 	"strings"
 
@@ -15,6 +17,10 @@ type EmailResponse struct {
 }
 
 func main() {
+	db.Init()
+	// Close the mongodb session
+	// defer db.MgoSession.Close()
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", indexRoute)
@@ -28,6 +34,7 @@ func main() {
 func indexRoute(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Hello World!\n"))
+	return
 }
 
 func doEmail(w http.ResponseWriter, r *http.Request) {
@@ -81,8 +88,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendEmail(toReplyEmail, toEmail, body string) bool {
-
-	client := postmark.NewClient(serverToken, accountToken)
+	client := postmark.NewClient(config.ServerToken, config.AccountToken)
 	email := postmark.Email{
 		From:       "no-reply@uicard.io",
 		To:         toEmail,
