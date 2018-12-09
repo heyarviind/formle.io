@@ -1,4 +1,29 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+package main
+
+import (
+	"strings"
+	"time"
+)
+
+func prepareEmailBody(params map[string]string) string {
+	currentTime := time.Now().UTC()
+	dateTime := currentTime.Format("02 Jan, 2006 15:04 pm")
+
+	// Worst way of mergin the strings
+	var formattedParams []string
+	for k, v := range params {
+		formattedParams = append(formattedParams, `
+		<tr>
+		<td width="120px" style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">`+k+`</td>
+		<td style="border-top: solid 1px #ededed;padding-top: 10px">`+v+`</td>
+		</tr>
+		`)
+	}
+
+	damn := strings.Join(formattedParams, "")
+
+	htmlBody := `
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=3Dutf-8">
@@ -10,11 +35,11 @@
   <table width="100%" bgcolor="#f9fafe" border="0" cellpadding="0" cellspacing="0">
     <tbody><tr>
       <td>
-
+        
         <table bgcolor="#ffffff" class="m_-7751771597802085424widecontent" align="center" cellpadding="0" cellspacing="0" border="0" style="width:100%">
           <tbody><tr>
             <td bgcolor="#e0ebfa" class="m_-7751771597802085424header" style="padding:49px 0px 4px">
-
+              
               <!-- <table align="center" border="0" cellpadding="0" cellspacing="0" style="width:100%">
                 <tbody><tr>
                   <td height="70">
@@ -30,12 +55,12 @@
                   </td>
                 </tr>
               </tbody></table> -->
-
+              
             </td>
           </tr>
           <tr>
             <td bgcolor="#e0ebfa" class="m_-7751771597802085424headerimagesection" style="line-height:0px">
-
+              
               <table align="center" border="0" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;line-height:0px">
                 <tbody><tr>
                   <td>
@@ -49,16 +74,16 @@
                   </td>
                 </tr>
               </tbody></table>
-
+              
             </td>
           </tr>
         </tbody></table>
-
+        
       </td>
     </tr>
     <tr>
       <td>
-
+        
         <table bgcolor="#ffffff" class="m_-7751771597802085424content" align="center" cellpadding="0" cellspacing="0" border="0" style="border-radius:0px 0px 10px 10px;width:100%;max-width:600px">
           <tbody><tr>
             <td class="m_-7751771597802085424innerpadding" style="padding:58px 64px 0px 62px">
@@ -76,47 +101,20 @@
                           Someone just submitted your form, here's what they had to say:
                           <br><br>
                           <!-- <hr style="margin-top:18px;margin-bottom:16px;color:#eaebf0;background-color:#eaebf0;height:1px;border:0 #eaebf0"> -->
-
+                          
                           <!-- Real info here -->
                           <table style="font-size:16px" cellpadding="10px">
-                            <tbody>
-                <tr>
-                <td width="120px" style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">name</td>
-                <td style="border-top: solid 1px #ededed;padding-top: 10px">arvind</td>
-                </tr>
-
-                <tr>
-                <td width="120px" style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">message</td>
-                <td style="border-top: solid 1px #ededed;padding-top: 10px">testing this thing from the go lang yay
-
-ssssss</td>
-                </tr>
-
-                <tr>
-                <td width="120px" style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">more</td>
-                <td style="border-top: solid 1px #ededed;padding-top: 10px">fields</td>
-                </tr>
-
-                <tr>
-                <td width="120px" style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">damn</td>
-                <td style="border-top: solid 1px #ededed;padding-top: 10px">nigga</td>
-                </tr>
-
-                <tr>
-                <td width="120px" style="font-weight:bold;vertical-align: top;border-top: solid 1px #ededed;padding-top: 10px">yeah</td>
-                <td style="border-top: solid 1px #ededed;padding-top: 10px">blah</td>
-                </tr>
-                </tbody>
+                            <tbody>` + damn + `</tbody>
                           </table>
 
                         </td>
                       </tr>
-
-
+                        
+  
                       </tr><tr>
                         <td class="m_-7751771597802085424bodycopy" style="padding-bottom:58px;color:#3e416d;font-family:helvetica;font-size:18px;line-height:1.5">
                           <br>
-                          <div style="font-size:14px;text-align:center;color: #9fa0b9;">The form was submitted on 08 Dec, 2018 22:40 pm UTC</div>
+                          <div style="font-size:14px;text-align:center;color: #9fa0b9;">The form was submitted on ` + dateTime + ` UTC</div>
                         </td>
                       </tr>
                     </tbody></table>
@@ -125,17 +123,17 @@ ssssss</td>
               </tbody></table>
             </td>
           </tr>
-                                </tbody></table>
-
-                                <table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%">
+				</tbody></table>
+				
+				<table bgcolor="#ffffff" align="center" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%">
           <tbody><tr>
             <td class="m_-7751771597802085424footer" bgcolor="#f9fafe" style="padding:48px 30px 15px">
-              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <table style="width:100%" width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tbody><tr>
                   <td align="center" style="padding:0px 0 40px">
-                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <table style="width:10%" width="10%" border="0" cellspacing="0" cellpadding="0">
                       <tbody><tr>
-
+                        
                         <td width="40" style="padding:0 32px" align="center">
                           <a href="https://www.twitter.com/uicardio/" target="_blank">
                             <img src="https://stag.uicard.io/img/twitter.png" width="37" height="37" alt="Facebook" border="0" style="height:auto" class="CToWUd">
@@ -151,7 +149,7 @@ ssssss</td>
                             <img src="https://stag.uicard.io/img/facebook.png" width="37" height="37" alt="Dribble" border="0" style="height:auto" class="CToWUd">
                           </a>
                         </td>
-
+                        
                       </tr>
                     </tbody></table>
                   </td>
@@ -163,20 +161,23 @@ ssssss</td>
                     </div>
                   </td>
                 </tr>
-
+                
               </tbody></table>
             </td>
           </tr>
         </tbody></table>
-
+        
       </td>
     </tr>
     <tr>
       <td>
-
+        
       </td>
     </tr>
   </tbody></table>
 
 </body>
 </html>
+	`
+	return htmlBody
+}
