@@ -46,6 +46,15 @@ func CreateUser(email string) bool {
 	return true
 }
 
+// VerifyUser when they click on verify email on first time form submission
 func VerifyUser(email string) bool {
+	if userExists, _ := CheckUser(email); userExists == true {
+		query := bson.M{"email": email}
+		change := bson.M{"$set": bson.M{"isverified": true}}
+		if err := db.MgoSession.DB(config.DBName).C("users").Update(query, change); err != nil {
+			panic(err)
+		}
+	}
 
+	return true
 }

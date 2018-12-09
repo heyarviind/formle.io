@@ -24,12 +24,13 @@ func main() {
 	// defer db.MgoSession.Close()
 	email := "heyarviind@gmail.com"
 
-	if userExists, _ := controller.CheckUser(email); userExists == false {
-		if err := controller.CreateUser(email); err != true {
+	if userExists, _ := controller.CheckUser(email); userExists == true {
+		if err := controller.VerifyUser(email); err != true {
 			panic(err)
 		}
 
-		panic("user created")
+		panic("user verified")
+
 	}
 
 	r := mux.NewRouter()
