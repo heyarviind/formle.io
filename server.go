@@ -9,9 +9,6 @@ import (
 	"github.com/keighl/postmark"
 )
 
-var serverToken = "0b6a11e4-d012-415d-9ce7-97010d3b6803"
-var accountToken = "ec02a12e-7ae0-4df0-86c6-62bb06ba77f0"
-
 //EmailResponse struct
 type EmailResponse struct {
 	Message string `json:"message" xml:"message"`
@@ -53,32 +50,37 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 		for key, value := range r.PostForm {
 			if key == "_replyto" {
 				toReplyEmail = strings.Join(value, "")
-			} else {
-				params[strings.Title(key)] = strings.Join(value, "")
 			}
+			params[strings.Title(key)] = strings.Join(value, "")
 		}
 
-		// Validate emails
-		if checkEmail(toEmail) && checkEmail(toReplyEmail) {
-			// Get the HTML Body
-			body := prepareEmailBody(params)
+		// Get the HTML Body
+		body := prepareEmailBody(params)
 
-			// Send the mail
-			// fmt.Println(body)
-			sendEmail(toReplyEmail, toEmail, body)
+		// Validate emails
+		if checkEmail(toEmail) {
+			if len(toReplyEmail) > 0 && checkEmail(toReplyEmail) {
+				// Send the mail
+				// fmt.Println(body)
+				if sendEmail(toReplyEmail, toEmail, body) {
+					w.WriteHeader(http.StatusOK)
+				} else {
+					panic("Something went wrong")
+				}
+			} else {
+				if sendEmail("", toEmail, body) {
+					w.WriteHeader(http.StatusOK)
+				} else {
+					panic("Something went wrong")
+				}
+			}
 		} else {
 			panic("In valid email provided!")
 		}
-
 	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func sendEmail(toReplyEmail, toEmail, body string) bool {
-
-	fmt.Printf("Reply to email : %s\n", toReplyEmail)
-	fmt.Printf("to email : %s\n", toEmail)
 
 	client := postmark.NewClient(serverToken, accountToken)
 	email := postmark.Email{
@@ -86,7 +88,7 @@ func sendEmail(toReplyEmail, toEmail, body string) bool {
 		To:         toEmail,
 		ReplyTo:    toReplyEmail,
 		Subject:    "New form submission - UICardio",
-		HtmlBody:   body, //[TODO] place html theme here
+		HtmlBody:   body,
 		TextBody:   body,
 		Tag:        "pw-reset",
 		TrackOpens: true,
@@ -94,7 +96,7 @@ func sendEmail(toReplyEmail, toEmail, body string) bool {
 
 	_, err := client.SendEmail(email)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 		return false
 	}
 	return true
