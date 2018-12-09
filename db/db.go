@@ -6,7 +6,6 @@ import (
 
 	"github.com/labstack/gommon/log"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // MgoSession int
@@ -21,14 +20,10 @@ func Init() {
 	log.Infof("Successfully connected to database!")
 	MgoSession = session
 
-	email := "desiboyarvind@gmail.com"
-
-	user := models.User{
-		ID:       bson.NewObjectId(),
-		Email:    email,
-		Verified: true}
-
-	// var result []User
+	// user := models.User{
+	// 	ID:       bson.NewObjectId(),
+	// 	Email:    email,
+	// 	Verified: true}
 
 	// Lets go to database
 	db := session.DB(config.DBName)
@@ -41,9 +36,9 @@ func Init() {
 		panic("User col is nil")
 	}
 
-	if err := userCol.Insert(&user); err != nil {
-		panic("unable to insert data")
-	}
+	// if err := userCol.Insert(&user); err != nil {
+	// 	panic("unable to insert data")
+	// }
 
 	if db == nil {
 		log.Errorf("db %v not found, exiting...", config.DBName)

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go-mailapp/config"
+	"go-mailapp/controller"
 	"go-mailapp/db"
 	"net/http"
 	"strings"
@@ -17,9 +18,19 @@ type EmailResponse struct {
 }
 
 func main() {
+	// Connect to database
 	db.Init()
 	// Close the mongodb session
 	// defer db.MgoSession.Close()
+	email := "heyarviind@gmail.com"
+
+	if userExists, _ := controller.CheckUser(email); userExists == false {
+		if err := controller.CreateUser(email); err != true {
+			panic(err)
+		}
+
+		panic("user created")
+	}
 
 	r := mux.NewRouter()
 
