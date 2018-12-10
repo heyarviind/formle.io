@@ -77,14 +77,14 @@ func CheckUserLimit(email string) bool {
 }
 
 //InsertFormIntoDatbase ...
-func InsertFormIntoDatbase(email, url string) bool {
+func InsertFormIntoDatbase(email, url, params string) bool {
 	var FormData models.FormSubmisson
 
 	user, _ := CheckUser(email)
 
 	FormData.ID = bson.NewObjectId()
 	FormData.UserID = user.ID
-	// FormData.FormData = formData
+	FormData.FormData = params
 	FormData.Created = time.Now()
 	FormData.FormURL = url
 

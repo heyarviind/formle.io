@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"go-mailapp/config"
 	"go-mailapp/controller"
@@ -49,7 +50,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 		)
 
 		var params = make(map[string]string)
-		var fromURL = string(r.Host) + r.URL.Path
+		var fromURL = r.Host + r.URL.Path
 
 		toEmail = mux.Vars(r)["email"]
 
@@ -65,6 +66,8 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 			params[strings.Title(key)] = strings.Join(value, "")
 		}
 
+		var jsonParams, _ = json.Marshal(params)
+
 		// Validate emails
 		if checkEmail(toEmail) {
 			fmt.Println("checked email")
@@ -78,7 +81,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 						//Check the limit
 						if controller.CheckUserLimit(toEmail) {
 							//Send the email
-							controller.InsertFormIntoDatbase(toEmail, fromURL)
+							controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
 						}
 					} else {
 						//Send an email to verify the email
