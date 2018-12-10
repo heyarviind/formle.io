@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/keighl/postmark"
+	"github.com/unrolled/render"
 )
 
 //EmailResponse struct
@@ -43,6 +44,10 @@ func indexRoute(w http.ResponseWriter, r *http.Request) {
 
 func doEmail(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
+		h := render.New(render.Options{
+			Extensions: []string{".html"},
+			Layout:     "layout",
+		})
 
 		var (
 			toReplyEmail string
@@ -82,6 +87,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 						if controller.CheckUserLimit(toEmail) {
 							//Send the email
 							controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
+							h.HTML(w, http.StatusOK, "emailsent", nil)
 						}
 					} else {
 						//Send an email to verify the email
