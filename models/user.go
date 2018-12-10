@@ -1,15 +1,28 @@
 package models
 
 import (
+	"time"
+
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // User struct
 type User struct {
-	ID       bson.ObjectId `json:"id" bson:"_id"`
-	Email    string        `json:"email" bson:"email"`
-	Verified bool          `json:"isverified" bson:"isverified"`
+	ID           bson.ObjectId `json:"id" bson:"_id"`
+	Email        string        `json:"email" bson:"email"`
+	Password     string        `json:"password" bson:"password"`
+	Plan         string        `json:"plan" bson:"plan"`
+	Verified     bool          `json:"isverified" bson:"isverified"`
+	RegisteredOn time.Time     `json:"registeredOn" bson:"registeredOn"`
+}
+
+//FormSubmisson struct
+type FormSubmisson struct {
+	ID            bson.ObjectId `json:"id" bson:"_id"`
+	UserID        string        `json:"userId" bson:"userId"`
+	DateMonthYear string        `json:"dateMonthYear" bson:"dateMonthYear"`
+	Count         int           `json:"count" bson:"count"`
 }
 
 // UserModelIndex ...

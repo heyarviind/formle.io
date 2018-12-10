@@ -20,11 +20,6 @@ func Init() {
 	log.Infof("Successfully connected to database!")
 	MgoSession = session
 
-	// user := models.User{
-	// 	ID:       bson.NewObjectId(),
-	// 	Email:    email,
-	// 	Verified: true}
-
 	// Lets go to database
 	db := session.DB(config.DBName)
 	userCol := db.C("users")

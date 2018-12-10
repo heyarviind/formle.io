@@ -37,6 +37,7 @@ func main() {
 
 	r.HandleFunc("/", indexRoute)
 	r.HandleFunc("/{email}", doEmail).Methods("POST")
+	r.HandleFunc("/verify/{email}/{uuid}", verifyEmail).Methods("GET")
 
 	if err := http.ListenAndServe(":1420", r); err != nil {
 		panic(err)
@@ -62,7 +63,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 		toEmail = mux.Vars(r)["email"]
 
 		if err := r.ParseForm(); err != nil {
-			fmt.Println("got stuck into an error")
+			fmt.Println("unable to parse the form")
 			panic(err)
 		}
 
@@ -73,30 +74,46 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 			params[strings.Title(key)] = strings.Join(value, "")
 		}
 
-		// Get the HTML Body
-		body := prepareEmailBody(params)
-
 		// Validate emails
 		if checkEmail(toEmail) {
 			if len(toReplyEmail) > 0 && checkEmail(toReplyEmail) {
-				// Send the mail
-				// fmt.Println(body)
+
+				user, verified := controller.CheckUser(toReplyEmail)
+
+				if user {
+					if verifyEmail {
+						//Check the limit
+						if user.isPro {
+							//Dont check the limit, just send the email
+						}
+					}
+				} else {
+					createUser := controller.CreateUser(toEmail)
+					if createUser {
+						//Redirect user to verify the email
+					}
+				}
+
+				// Get the HTML Body
+				body := prepareEmailBody(params)
+
 				if sendEmail(toReplyEmail, toEmail, body) {
 					w.WriteHeader(http.StatusOK)
 				} else {
 					panic("Something went wrong")
 				}
 			} else {
-				if sendEmail("", toEmail, body) {
-					w.WriteHeader(http.StatusOK)
-				} else {
-					panic("Something went wrong")
-				}
+				//Error, user need to enter valid email
 			}
+
 		} else {
 			panic("In valid email provided!")
 		}
 	}
+}
+
+func verifyEmail(w http.ResponseWriter, r *http.Request) {
+
 }
 
 func sendEmail(toReplyEmail, toEmail, body string) bool {

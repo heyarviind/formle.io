@@ -8,3 +8,9 @@ var AccountToken = "ec02a12e-7ae0-4df0-86c6-62bb06ba77f0"
 
 //DBName ...
 var DBName = "uic-mailapp"
+
+//MonthlyEmailLimit ...
+var MonthlyEmailLimit = 50
+
+//Plans ...
+var Plans = map[string]int{"free": 50, "pro": 200}
