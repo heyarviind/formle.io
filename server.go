@@ -22,16 +22,6 @@ func main() {
 	db.Init()
 	// Close the mongodb session
 	// defer db.MgoSession.Close()
-	email := "heyarviind@gmail.com"
-
-	if userExists, _ := controller.CheckUser(email); userExists == true {
-		if err := controller.VerifyUser(email); err != true {
-			panic(err)
-		}
-
-		panic("user verified")
-
-	}
 
 	r := mux.NewRouter()
 
@@ -59,6 +49,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 		)
 
 		var params = make(map[string]string)
+		var fromURL = string(r.Host) + r.URL.Path
 
 		toEmail = mux.Vars(r)["email"]
 
@@ -76,32 +67,37 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 
 		// Validate emails
 		if checkEmail(toEmail) {
+			fmt.Println("checked email")
 			if len(toReplyEmail) > 0 && checkEmail(toReplyEmail) {
+				fmt.Println("checkd reply email")
+				user, verified := controller.CheckUser(toEmail)
 
-				user, verified := controller.CheckUser(toReplyEmail)
-
-				if user {
-					if verifyEmail {
+				if len(user.ID) > 0 {
+					fmt.Println("user found")
+					if verified {
 						//Check the limit
-						if user.isPro {
-							//Dont check the limit, just send the email
+						if controller.CheckUserLimit(toEmail) {
+							//Send the email
+							controller.InsertFormIntoDatbase(toEmail, fromURL)
 						}
+					} else {
+						//Send an email to verify the email
 					}
 				} else {
+					fmt.Println("email not found, creating the email")
 					createUser := controller.CreateUser(toEmail)
 					if createUser {
 						//Redirect user to verify the email
 					}
 				}
-
 				// Get the HTML Body
-				body := prepareEmailBody(params)
+				// body := prepareEmailBody(params)
 
-				if sendEmail(toReplyEmail, toEmail, body) {
-					w.WriteHeader(http.StatusOK)
-				} else {
-					panic("Something went wrong")
-				}
+				// if sendEmail(toReplyEmail, toEmail, body) {
+				// 	w.WriteHeader(http.StatusOK)
+				// } else {
+				// 	panic("Something went wrong")
+				// }
 			} else {
 				//Error, user need to enter valid email
 			}

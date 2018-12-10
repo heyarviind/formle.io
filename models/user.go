@@ -17,14 +17,6 @@ type User struct {
 	RegisteredOn time.Time     `json:"registeredOn" bson:"registeredOn"`
 }
 
-//FormSubmisson struct
-type FormSubmisson struct {
-	ID            bson.ObjectId `json:"id" bson:"_id"`
-	UserID        string        `json:"userId" bson:"userId"`
-	DateMonthYear string        `json:"dateMonthYear" bson:"dateMonthYear"`
-	Count         int           `json:"count" bson:"count"`
-}
-
 // UserModelIndex ...
 func UserModelIndex() mgo.Index {
 	return mgo.Index{
