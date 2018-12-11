@@ -6,6 +6,7 @@ import (
 	"go-mailapp/config"
 	"go-mailapp/controller"
 	"go-mailapp/db"
+	"go-mailapp/slack"
 	"net/http"
 	"strings"
 
@@ -61,7 +62,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 
 		if err := r.ParseForm(); err != nil {
 			fmt.Println("unable to parse the form")
-			panic(err)
+			h.HTML(w, http.StatusOK, "wentwrong", nil)
 		}
 
 		for key, value := range r.PostForm {
@@ -75,44 +76,39 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 
 		// Validate emails
 		if checkEmail(toEmail) {
-			fmt.Println("checked email")
 			if len(toReplyEmail) > 0 && checkEmail(toReplyEmail) {
-				fmt.Println("checkd reply email")
 				user, verified := controller.CheckUser(toEmail)
 
 				if len(user.ID) > 0 {
-					fmt.Println("user found")
 					if verified {
 						//Check the limit
 						if controller.CheckUserLimit(toEmail) {
-							//Send the email
+							//Insert data into database
 							controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
+							//TODO Send the email
 							h.HTML(w, http.StatusOK, "emailsent", nil)
+						} else {
+							//TODO Send limit crossed email
+							fmt.Println("Sending limit cross email!")
+							slack.MakeNotification("[LIMIT] " + toEmail + " reached the monthly limit! 😅")
+							controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
 						}
 					} else {
 						//Send an email to verify the email
+						h.HTML(w, http.StatusOK, "verify-email", nil)
 					}
 				} else {
-					fmt.Println("email not found, creating the email")
 					createUser := controller.CreateUser(toEmail)
 					if createUser {
-						//Redirect user to verify the email
+						h.HTML(w, http.StatusOK, "verify-email", nil)
 					}
 				}
-				// Get the HTML Body
-				// body := prepareEmailBody(params)
-
-				// if sendEmail(toReplyEmail, toEmail, body) {
-				// 	w.WriteHeader(http.StatusOK)
-				// } else {
-				// 	panic("Something went wrong")
-				// }
 			} else {
-				//Error, user need to enter valid email
+				//TODO Error, user need to enter valid email
 			}
 
 		} else {
-			panic("In valid email provided!")
+			//TODO Invalid email provided
 		}
 	}
 }

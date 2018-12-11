@@ -13,4 +13,7 @@ var DBName = "uic-mailapp"
 var MonthlyEmailLimit = 50
 
 //Plans ...
-var Plans = map[string]int{"free": 50, "pro": 200}
+var Plans = map[string]int{"free": 5, "pro": 200}
+
+//SlackWebhookURL ...
+var SlackWebhookURL = "https://hooks.slack.com/services/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"

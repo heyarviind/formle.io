@@ -62,7 +62,7 @@ func CheckUserLimit(email string) bool {
 		db.MgoSession.DB(config.DBName).C("formdata").Pipe(pipe).All(&result)
 		if len(result) == 1 {
 			count := result[0]["total"]
-			if count.(int) < 50 {
+			if count.(int) < config.Plans[user.Plan] {
 				isValid = true
 			} else {
 				isValid = false
@@ -94,6 +94,15 @@ func InsertFormIntoDatbase(email, url, params string) bool {
 
 	return true
 }
+
+//SendLimitCrossedEmail ...
+// func SendLimitCrossedEmail(email string) bool {
+// 	user, _ := CheckUser(email)
+
+// 	if user.Plan == "free" {
+
+// 	}
+// }
 
 // VerifyUser when they click on verify email on first time form submission
 // func VerifyUser(email string) bool {
