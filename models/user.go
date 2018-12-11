@@ -10,6 +10,7 @@ import (
 // User struct
 type User struct {
 	ID           bson.ObjectId `json:"id" bson:"_id"`
+	UUID         string        `json:"uuid" bson:"uuid"`
 	Email        string        `json:"email" bson:"email"`
 	Password     string        `json:"password" bson:"password"`
 	Plan         string        `json:"plan" bson:"plan"`

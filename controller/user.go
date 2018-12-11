@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"fmt"
 	"go-mailapp/config"
 	"go-mailapp/db"
 	"go-mailapp/models"
 	"time"
 
+	uuid "github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -37,6 +39,7 @@ func CreateUser(email string) bool {
 	user.Email = email
 	user.Plan = "free"
 	user.RegisteredOn = time.Now()
+	user.UUID = uuid.Must(uuid.NewV4()).String()
 
 	if err := db.MgoSession.DB(config.DBName).C("users").Insert(&user); err != nil {
 		panic(err)
@@ -95,6 +98,20 @@ func InsertFormIntoDatbase(email, url, params string) bool {
 	return true
 }
 
+// SendVerificationEmail ...
+func SendVerificationEmail(email string) bool {
+	user, _ := CheckUser(email)
+
+	if user.Verified == false {
+		emailBody := PrepareVerificationEmailBody(user.Email, user.UUID)
+		if SendEmail("", email, "Verify your email", emailBody) == true {
+			fmt.Println("verification email send!")
+		}
+	}
+
+	return true
+}
+
 //SendLimitCrossedEmail ...
 // func SendLimitCrossedEmail(email string) bool {
 // 	user, _ := CheckUser(email)
@@ -105,14 +122,15 @@ func InsertFormIntoDatbase(email, url, params string) bool {
 // }
 
 // VerifyUser when they click on verify email on first time form submission
-// func VerifyUser(email string) bool {
-// 	if userExists, _ := CheckUser(email); userExists == true {
-// 		query := bson.M{"email": email}
-// 		change := bson.M{"$set": bson.M{"isverified": true}}
-// 		if err := db.MgoSession.DB(config.DBName).C("users").Update(query, change); err != nil {
-// 			panic(err)
-// 		}
-// 	}
+func VerifyUser(email, uuid string) bool {
+	user, _ := CheckUser(email)
+	if len(user.UUID) > 0 {
+		query := bson.M{"email": email, "uuid": uuid}
+		change := bson.M{"$set": bson.M{"isverified": true}}
+		if err := db.MgoSession.DB(config.DBName).C("users").Update(query, change); err != nil {
+			return false
+		}
+	}
 
-// 	return true
-// }
+	return true
+}

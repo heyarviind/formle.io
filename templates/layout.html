@@ -1,14 +1,30 @@
 <html>
   <head>
     <title>My Layout</title>
+    <link rel="stylesheet" href="http://formle.io/static/css/style.css">
     <!-- Render the partial template called `css-$current_template` here -->
     {{ partial "css" }}
   </head>
   <body>
+    <div class="topBand"></div>
+    <header class="py-5">
+      <div class="container text-center">
+        <a href="https://formle.io/">
+          <img src="https://formle.io/img/logo-white.png" width="180px" alt=""><sup class="text-white">Beta</sup>
+        </a>
+      </div>
+    </header>
     <!-- render the partial template called `header-$current_template` here -->
     {{ partial "header" }}
     <!-- Render the current template here -->
-    {{ yield }}
+    <section>
+      <div class="container">
+        <div class="bg-white p-5 rounded shadow-sm">
+          {{ yield }}
+        </div>
+      </div>
+    </section>
+    
     <!-- render the partial template called `footer-$current_template` here -->
     {{ partial "footer" }}
   </body>

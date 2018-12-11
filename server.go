@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"go-mailapp/config"
 	"go-mailapp/controller"
 	"go-mailapp/db"
 	"go-mailapp/slack"
@@ -11,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/keighl/postmark"
 	"github.com/unrolled/render"
 )
 
@@ -76,35 +74,38 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 
 		// Validate emails
 		if checkEmail(toEmail) {
-			if len(toReplyEmail) > 0 && checkEmail(toReplyEmail) {
-				user, verified := controller.CheckUser(toEmail)
 
-				if len(user.ID) > 0 {
-					if verified {
-						//Check the limit
-						if controller.CheckUserLimit(toEmail) {
-							//Insert data into database
-							controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
-							//TODO Send the email
-							h.HTML(w, http.StatusOK, "emailsent", nil)
-						} else {
-							//TODO Send limit crossed email
-							fmt.Println("Sending limit cross email!")
-							slack.MakeNotification("[LIMIT] " + toEmail + " reached the monthly limit! 😅")
-							controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
-						}
+			user, verified := controller.CheckUser(toEmail)
+			if len(toReplyEmail) > 0 {
+				if checkEmail(toReplyEmail) != true {
+					fmt.Println("Invalid to email")
+					h.HTML(w, http.StatusOK, "invalid-email", nil)
+				}
+			}
+			if len(user.ID) > 0 {
+				if verified {
+					//Check the limit
+					if controller.CheckUserLimit(toEmail) {
+						//Insert data into database
+						controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
+						//TODO Send the email
+						h.HTML(w, http.StatusOK, "emailsent", nil)
 					} else {
-						//Send an email to verify the email
-						h.HTML(w, http.StatusOK, "verify-email", nil)
+						//TODO Send limit crossed email
+						fmt.Println("Sending limit cross email!")
+						slack.MakeNotification("[LIMIT] " + toEmail + " reached the monthly limit! 😅")
+						controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
 					}
 				} else {
-					createUser := controller.CreateUser(toEmail)
-					if createUser {
-						h.HTML(w, http.StatusOK, "verify-email", nil)
-					}
+					//Send an email to verify the email
+					h.HTML(w, http.StatusOK, "verify-email", nil)
 				}
 			} else {
-				//TODO Error, user need to enter valid email
+				if createUser := controller.CreateUser(toEmail); createUser == true {
+					// TODO send verification email
+					controller.SendVerificationEmail(toEmail)
+					h.HTML(w, http.StatusOK, "verify-email", nil)
+				}
 			}
 
 		} else {
@@ -114,26 +115,25 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 }
 
 func verifyEmail(w http.ResponseWriter, r *http.Request) {
+	h := render.New(render.Options{
+		Extensions: []string{".html"},
+		Layout:     "layout",
+	})
 
-}
+	var (
+		email string
+		uuid  string
+	)
 
-func sendEmail(toReplyEmail, toEmail, body string) bool {
-	client := postmark.NewClient(config.ServerToken, config.AccountToken)
-	email := postmark.Email{
-		From:       "no-reply@uicard.io",
-		To:         toEmail,
-		ReplyTo:    toReplyEmail,
-		Subject:    "New form submission - UICardio",
-		HtmlBody:   body,
-		TextBody:   body,
-		Tag:        "pw-reset",
-		TrackOpens: true,
+	email = mux.Vars(r)["email"]
+	uuid = mux.Vars(r)["uuid"]
+
+	if checkEmail(email) {
+		if controller.VerifyUser(email, uuid) == true {
+			h.HTML(w, http.StatusOK, "email-verified", nil)
+		}
+	} else {
+		h.HTML(w, http.StatusOK, "error", nil)
 	}
 
-	_, err := client.SendEmail(email)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	return true
 }
