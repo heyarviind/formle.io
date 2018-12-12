@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"go-mailapp/controller"
-	"go-mailapp/db"
-	"go-mailapp/slack"
+	"formle/controller"
+	"formle/database"
+	"formle/slack"
 	"net/http"
 	"strings"
 
@@ -20,7 +20,7 @@ type EmailResponse struct {
 
 func main() {
 	// Connect to database
-	db.Init()
+	database.Init()
 	// Close the mongodb session
 	// defer db.MgoSession.Close()
 

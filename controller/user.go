@@ -2,9 +2,9 @@ package controller
 
 import (
 	"fmt"
-	"go-mailapp/config"
-	"go-mailapp/database"
-	"go-mailapp/models"
+	"formle/config"
+	"formle/database"
+	"formle/models"
 	"time"
 
 	uuid "github.com/satori/go.uuid"

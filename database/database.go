@@ -1,8 +1,8 @@
 package database
 
 import (
-	"go-mailapp/config"
-	"go-mailapp/models"
+	"formle/config"
+	"formle/models"
 
 	"github.com/labstack/gommon/log"
 	"gopkg.in/mgo.v2"

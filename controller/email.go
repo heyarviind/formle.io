@@ -2,7 +2,7 @@ package controller
 
 import (
 	"fmt"
-	"go-mailapp/config"
+	"formle/config"
 
 	"github.com/keighl/postmark"
 )
