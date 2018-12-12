@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 	"go-mailapp/config"
-	"go-mailapp/db"
+	"go-mailapp/database"
 	"go-mailapp/models"
 	"time"
 
@@ -20,7 +20,7 @@ func CheckUser(email string) (*models.User, bool) {
 	)
 
 	// var user *models.User
-	if err := db.MgoSession.DB(config.DBName).C("users").Find(bson.M{"email": email}).One(&user); err != nil {
+	if err := database.MgoSession.DB(config.DBName).C("users").Find(bson.M{"email": email}).One(&user); err != nil {
 		return &user, userverified
 	}
 
@@ -41,7 +41,7 @@ func CreateUser(email string) bool {
 	user.RegisteredOn = time.Now()
 	user.UUID = uuid.Must(uuid.NewV4()).String()
 
-	if err := db.MgoSession.DB(config.DBName).C("users").Insert(&user); err != nil {
+	if err := database.MgoSession.DB(config.DBName).C("users").Insert(&user); err != nil {
 		panic(err)
 	}
 
@@ -62,7 +62,7 @@ func CheckUserLimit(email string) bool {
 
 	if user.Plan == "free" {
 		pipe := []bson.M{{"$project": bson.M{"month": bson.M{"$month": "$created"}, "userId": 1}}, {"$match": bson.M{"userId": user.ID, "month": currentMonth}}, {"$group": bson.M{"_id": "null", "total": bson.M{"$sum": 1}}}}
-		db.MgoSession.DB(config.DBName).C("formdata").Pipe(pipe).All(&result)
+		database.MgoSession.DB(config.DBName).C("formdata").Pipe(pipe).All(&result)
 		if len(result) == 1 {
 			count := result[0]["total"]
 			if count.(int) < config.Plans[user.Plan] {
@@ -91,7 +91,7 @@ func InsertFormIntoDatbase(email, url, params string) bool {
 	FormData.Created = time.Now()
 	FormData.FormURL = url
 
-	if err := db.MgoSession.DB(config.DBName).C("formdata").Insert(&FormData); err != nil {
+	if err := database.MgoSession.DB(config.DBName).C("formdata").Insert(&FormData); err != nil {
 		panic(err)
 	}
 
@@ -134,7 +134,7 @@ func VerifyUser(uuid string) bool {
 
 	query := bson.M{"uuid": uuid}
 	change := bson.M{"$set": bson.M{"isverified": true}}
-	if err := db.MgoSession.DB(config.DBName).C("users").Update(query, change); err != nil {
+	if err := database.MgoSession.DB(config.DBName).C("users").Update(query, change); err != nil {
 		return false
 	}
 
