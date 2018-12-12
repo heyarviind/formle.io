@@ -28,7 +28,7 @@ func main() {
 
 	r.HandleFunc("/", indexRoute)
 	r.HandleFunc("/{email}", doEmail).Methods("POST")
-	r.HandleFunc("/verify/{email}/{uuid}", verifyEmail).Methods("GET")
+	r.HandleFunc("/verify/{uuid}", verifyEmail).Methods("GET")
 
 	if err := http.ListenAndServe(":1420", r); err != nil {
 		panic(err)
@@ -89,13 +89,15 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 						//Insert data into database
 						controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
 						//TODO Send the email
-						h.HTML(w, http.StatusOK, "emailsent", nil)
 					} else {
 						//TODO Send limit crossed email
 						fmt.Println("Sending limit cross email!")
 						slack.MakeNotification("[LIMIT] " + toEmail + " reached the monthly limit! 😅")
 						controller.InsertFormIntoDatbase(toEmail, fromURL, string(jsonParams))
+						// TODO inform user about the limit
+						controller.SendLimitCrossedEmail(toEmail)
 					}
+					h.HTML(w, http.StatusOK, "emailsent", nil)
 				} else {
 					//Send an email to verify the email
 					h.HTML(w, http.StatusOK, "verify-email", nil)
@@ -121,17 +123,13 @@ func verifyEmail(w http.ResponseWriter, r *http.Request) {
 	})
 
 	var (
-		email string
-		uuid  string
+		uuid string
 	)
 
-	email = mux.Vars(r)["email"]
 	uuid = mux.Vars(r)["uuid"]
 
-	if checkEmail(email) {
-		if controller.VerifyUser(email, uuid) == true {
-			h.HTML(w, http.StatusOK, "email-verified", nil)
-		}
+	if controller.VerifyUser(uuid) == true {
+		h.HTML(w, http.StatusOK, "email-verified", nil)
 	} else {
 		h.HTML(w, http.StatusOK, "error", nil)
 	}

@@ -113,23 +113,29 @@ func SendVerificationEmail(email string) bool {
 }
 
 //SendLimitCrossedEmail ...
-// func SendLimitCrossedEmail(email string) bool {
-// 	user, _ := CheckUser(email)
+func SendLimitCrossedEmail(email string) bool {
+	user, _ := CheckUser(email)
 
-// 	if user.Plan == "free" {
+	emailBody := PrepareLimitEmailBody()
 
-// 	}
-// }
+	if user.Plan == "free" {
+		if CheckUserLimit(email) == false {
+			if SendEmail("", email, "Your email limit have Crossed, please upgrade your plan!", emailBody) == true {
+				return true
+			}
+		}
+	}
+
+	return true
+}
 
 // VerifyUser when they click on verify email on first time form submission
-func VerifyUser(email, uuid string) bool {
-	user, _ := CheckUser(email)
-	if len(user.UUID) > 0 {
-		query := bson.M{"email": email, "uuid": uuid}
-		change := bson.M{"$set": bson.M{"isverified": true}}
-		if err := db.MgoSession.DB(config.DBName).C("users").Update(query, change); err != nil {
-			return false
-		}
+func VerifyUser(uuid string) bool {
+
+	query := bson.M{"uuid": uuid}
+	change := bson.M{"$set": bson.M{"isverified": true}}
+	if err := db.MgoSession.DB(config.DBName).C("users").Update(query, change); err != nil {
+		return false
 	}
 
 	return true
