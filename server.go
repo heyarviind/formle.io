@@ -22,12 +22,13 @@ func main() {
 	// Connect to database
 	database.Init()
 	// Close the mongodb session
-	// defer db.MgoSession.Close()
+	defer database.MgoSession.Close()
 
 	r := mux.NewRouter()
 
+	// Basic endpoints
 	r.HandleFunc("/", indexRoute)
-	r.HandleFunc("/{email}", doEmail).Methods("POST")
+	r.HandleFunc("/{email}", doEmail)
 	r.HandleFunc("/verify/{uuid}", verifyEmail).Methods("GET")
 
 	if err := http.ListenAndServe(":1420", r); err != nil {
@@ -36,16 +37,19 @@ func main() {
 }
 
 func indexRoute(w http.ResponseWriter, r *http.Request) {
+	// Redirect to default domain name
 	http.Redirect(w, r, "https://formle.io", http.StatusSeeOther)
 }
 
 func doEmail(w http.ResponseWriter, r *http.Request) {
+
+	h := render.New(render.Options{
+		Directory:  "templates",
+		Extensions: []string{".html"},
+		Layout:     "layout",
+	})
+
 	if r.Method == "POST" {
-		h := render.New(render.Options{
-			Directory:  "./templates",
-			Extensions: []string{".html"},
-			Layout:     "layout",
-		})
 
 		var (
 			toReplyEmail string
@@ -112,6 +116,8 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 		} else {
 			//TODO Invalid email provided
 		}
+	} else {
+		http.Redirect(w, r, "https://formle.io", http.StatusSeeOther)
 	}
 }
 
