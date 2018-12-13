@@ -44,6 +44,7 @@ func indexRoute(w http.ResponseWriter, r *http.Request) {
 func doEmail(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		h := render.New(render.Options{
+			Directory:  "templates",
 			Extensions: []string{".html"},
 			Layout:     "layout",
 		})
@@ -118,6 +119,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 
 func verifyEmail(w http.ResponseWriter, r *http.Request) {
 	h := render.New(render.Options{
+		Directory:  "templates",
 		Extensions: []string{".html"},
 		Layout:     "layout",
 	})
