@@ -36,15 +36,21 @@ func main() {
 }
 
 func indexRoute(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello World!\n"))
+	h := render.New(render.Options{
+		Directory:  "./templates",
+		Extensions: []string{".html"},
+		Layout:     "layout",
+	})
+
+	h.HTML(w, http.StatusOK, "verify-email", nil)
+
 	return
 }
 
 func doEmail(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		h := render.New(render.Options{
-			Directory:  "templates",
+			Directory:  "./templates",
 			Extensions: []string{".html"},
 			Layout:     "layout",
 		})
