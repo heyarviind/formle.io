@@ -37,9 +37,8 @@ func main() {
 
 func indexRoute(w http.ResponseWriter, r *http.Request) {
 	h := render.New(render.Options{
-		Directory:  "./templates",
+		Directory:  "templates",
 		Extensions: []string{".html"},
-		Layout:     "layout",
 	})
 
 	h.HTML(w, http.StatusOK, "verify-email", nil)
