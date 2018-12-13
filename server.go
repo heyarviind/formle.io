@@ -107,7 +107,7 @@ func doEmail(w http.ResponseWriter, r *http.Request) {
 				if createUser := controller.CreateUser(toEmail); createUser == true {
 					// TODO send verification email
 					controller.SendVerificationEmail(toEmail)
-					h.HTML(w, http.StatusOK, "verify-email", nil)
+					h.HTML(w, http.StatusOK, "templates/verify-email", nil)
 				}
 			}
 
