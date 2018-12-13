@@ -36,15 +36,7 @@ func main() {
 }
 
 func indexRoute(w http.ResponseWriter, r *http.Request) {
-	h := render.New(render.Options{
-		Directory:  "formle/templates",
-		Extensions: []string{".html"},
-		Layout:     "layout",
-	})
-
-	h.HTML(w, http.StatusOK, "verify-email", nil)
-
-	return
+	http.Redirect(w, r, "https://formle.io", http.StatusSeeOther)
 }
 
 func doEmail(w http.ResponseWriter, r *http.Request) {
