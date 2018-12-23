@@ -7,6 +7,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+
 // User struct
 type User struct {
 	ID           bson.ObjectId `json:"id" bson:"_id"`
